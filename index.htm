@@ -1,0 +1,87 @@
+<style type="text/css">
+	body {
+		font-family: sans-serif;
+	}
+	fieldset {
+		margin: 0 0 14px;
+	}
+	.error {
+		color: red;
+	}
+	.hidden {
+		display: none;
+	}
+</style>
+
+
+
+
+
+<form method="post" action="" class="contentBox-form clearfix js-form">
+
+	<div class="error js-form-warning hidden">Fix errors in form dude</div>
+
+	<div class="aligncenter">
+		<fieldset class="fieldset-inline">
+			<div class="box-label"><span for="feedback_topic" class="label">choose one</span></div>
+			<select name="topic" id="feedback_topic" class="js-dropkick" tabindex="1">
+				<option value="">select</option>
+				<option value="">products</option>
+				<option value="">services</option>
+				<option value="">general</option>
+			</select>
+		</fieldset>
+	</div>
+
+
+	<div class="box-label aligncenter"><label for="feedback_textarea" class="label">share your feedback</label></div>
+
+	<fieldset class="js-fieldset">
+		<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-warning="please fill in" data-chars-left="characters left" rows="3" maxlength="1000" tabindex="2"></textarea>
+	</fieldset>
+
+
+	<fieldset class="fieldset-inline">
+		<div class="box-label"><label for="feedback_email" class="label">email (optional)</label></div>
+		<div class="js-fieldset"><input value="" type="text" data-type="email" data-warning="correct email please" id="feedback_email" tabindex="3"></div>
+	</fieldset>
+
+
+	<fieldset class="fieldset-inline fieldset-secondary alignright">
+		<span class="tag-label">Can we follow up?</span>
+		<label class="label label-radio" for="feedback_contact_yes">
+			<input type="radio" name="feedback_followup" id="feedback_contact_yes" tabindex="4" data-bind='{"type":"form_action","on":"change","action":"email_required","value":true}'>
+			<span class="tag-label">yes</span>
+		</label>
+		<label class="label label-radio last" for="feedback_contact_no">
+			<input type="radio" name="feedback_followup" id="feedback_contact_no" checked="checked" tabindex="5" data-bind='{"type":"form_action","on":"change","action":"email_required","value":false}'>
+			<span class="tag-label">no</span>
+		</label>
+	</fieldset>
+
+
+	<fieldset class="js-fieldset">
+		<label class="label-checkbox" for="feedback_agreement">
+			<input type="checkbox" class="" id="feedback_agreement" data-required="true" data-warning="Please accept the legals" tabindex="6">
+			<span class="tag-label pad-left">i agree to the legal shit</span>
+		</label>
+	</fieldset>
+
+
+	<fieldset class="aligncenter">
+		<button class="button-black js-form-submit" tabindex="7"><span>send</span></button>
+	</fieldset>
+
+
+</form>
+
+
+<form action="" class="js-form">
+	<input type="">
+	<textarea name="" id="" cols="30" rows="10"></textarea>
+</form>
+
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="script.js"></script>
