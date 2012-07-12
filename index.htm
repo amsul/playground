@@ -14,13 +14,61 @@
 	.success {
 		color: green;
 	}
+	ul {
+		list-style: none;
+		padding: 0;
+	}
+	li {
+		margin-bottom: 20px;
+	}
 </style>
 
 
 
+<form id="change-password" method="post" class="js-form" data-type="form_password_change">
+
+	<p class="success js-box-success hidden">Good to go :)</p>
+
+	<div class="error js-form-warning hidden">Fix errors in form dude</div>
+
+	<ul>
+		<li>
+	        <div class="js-box-label">
+		        <label for="password">Password</label><br>
+			    <input type="password" id="password" name="password" data-required="true" data-warning="missed this field" data-typeee-warning="invalid format yo" value="00000000">
+		    </div>
+		</li>
+		<li>
+		    <div class="js-box-label">
+		    	<label for="password-new">Password new</label><br>
+		    	<input type="password" id="password-new" name="password-new" data-required="true" data-warning="missed this field" data-type-warning='{"password_short":"passworrd too short","password_insecure":"password needs capital, lower, and special or number"}' value="loL33!@lsl">
+		    </div>
+    	</li>
+		<li>
+			<div class="js-box-label">
+		        <label for="password-confirm">Password confirm</label><br>
+		        <input type="password" data-type="password_confirm" id="password-confirm" name="password-confirm" data-required="true" data-warning="missed this field" data-type-warning='{"password_no_match":"passwords dont match"}' value="a"> 
+		    </div>
+		</li>
+    </ul>
+
+    <fieldset class="row last">
+		<input type="submit" class="button-black" value="Send">
+	</fieldset>					
+</form>
 
 
-<form method="post" action="" class="contentBox-form clearfix js-form">
+
+<br>
+<br>
+<hr>
+<hr>
+<br><br><br><br>
+
+
+
+
+<form method="post" class="contentBox-form clearfix js-form" data-type="form_feedback">
 
 	<p class="success js-box-success hidden">Good to go :)</p>
 
