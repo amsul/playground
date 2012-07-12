@@ -55,11 +55,11 @@
 	<fieldset class="fieldset-inline fieldset-secondary alignright">
 		<span class="tag-label">Can we follow up?</span>
 		<label class="label label-radio" for="feedback_contact_yes">
-			<input type="radio" name="feedback_followup" id="feedback_contact_yes" tabindex="4" data-bind='{"type":"intention","action":"email_required","value":true}'>
+			<input type="radio" name="feedback_followup" id="feedback_contact_yes" tabindex="4" data-bind='{"type":"intention","action":"email_required","value":"true"}'>
 			<span class="tag-label">yes</span>
 		</label>
 		<label class="label label-radio last" for="feedback_contact_no">
-			<input type="radio" name="feedback_followup" id="feedback_contact_no" checked="checked" tabindex="5" data-bind='{"type":"intention","action":"email_required","value":false}'>
+			<input type="radio" name="feedback_followup" id="feedback_contact_no" checked="checked" tabindex="5" data-bind='{"type":"intention","action":"email_required","value":"false"}'>
 			<span class="tag-label">no</span>
 		</label>
 	</fieldset>
@@ -74,7 +74,7 @@
 
 
 	<fieldset class="aligncenter">
-		<button class="button-black js-form-submit" tabindex="7"><span>send</span></button>
+		<button class="button-black" tabindex="7"><span>send</span></button>
 	</fieldset>
 
 

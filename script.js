@@ -1,9 +1,4 @@
 
-/* ==========================================================================
-
-  Form validation with event bindings
-
-========================================================================== */
 
 
 /* */
@@ -42,8 +37,51 @@
 
 
 
-  /*
-    Let the validation begin!
+  /* ==========================================================================
+
+    Form validation
+    ===============
+
+    • Forms should have the class `js-form`
+    • Submit buttons do not need an additional class
+
+
+    Form errors
+    ===========
+
+    • General form error should have the class `js-form-warning hidden`
+    • Fields with inline errors should have the following attribute:
+        `data-warning="__WARNING_MESSAGE_HERE__"`
+
+    
+    Form fields
+    ===========
+
+    • Required fields should have the attribute `data-required="true"`
+    • Optional fields that require validation if filled in (eg email),
+        should have the attribute `data-type="email"`
+
+    • Check `self.validateField` for more info
+
+
+    Form event bindings
+    ===================
+
+    • Bind events on form elements, such as a radio button that makes
+        email required on a value change, add the `data-bind` attribute:
+        `
+          data-bind='{
+            "type":     "intention",
+            "action":   "__UNIQUE_ACTION_NAME_HERE__",
+            "value":    "__SOME_VALUE_HERE__"
+          }'
+        `
+
+        *** Remove the whitespace & line breaks ***
+
+    • Check `self.bindEvent` for more info
+
+
   ========================================================================== */
 
   Validator = function(form) {
@@ -51,16 +89,106 @@
 
 
 
-    /** Bind events with various intents **/
 
-    self.bind = {
+    /* 
+
+      Validate required fields
+      ------------------------
+
+      • Validated using the attribute `data-required="true"`
+      • Required fields can be:
+          - textarea
+          - input[type=text]
+          - input[type=checkbox]
+
+      
+      Validate optional fields
+      ------------------------
+
+      • Validated using the attribute `data-type`.
+      • The field's `data-type` is validated with regEx
+
+    ======================================================================== */
+
+    self.validateField = function($field, valid) {
+
+      var fieldType = $field[0].type,
+          fieldValue = ( fieldType === 'checkbox' || fieldType === 'radio' ) ? $field[0].checked : $field[0].value,
+          fieldDataType = $field[0].dataset.type
+
+      ////// console.log( fieldDataType )
+
+      // if there is already an error, return as invalid
+
+      if ( $field.prev('.js-error').length ) {
+        valid = false
+      }
+
+
+      // if there isn't already an error there
+      
+      else {
+
+        /** textareas & checkboxes **/
+
+        if ( ( fieldType === 'textarea' && !fieldValue ) || ( fieldType === 'checkbox' && !fieldValue ) ) {
+          self.warningShow( $field )
+          valid = false
+        }
+
+        else if ( fieldType === 'text' ) {
+
+          if ( !regEx[ fieldDataType ].test( fieldValue ) ) {
+            self.warningShow( $field )
+            valid = false
+          }
+        }
+
+        else {
+          console.log( 'this field seems valid' )
+          console.dir( $field )
+        }
+
+      }
+
+      return valid
+    }
+
+
+
+
+
+    /*
+
+      Bind events to fields
+      ---------------------
+
+      • Bind events to fields with `data-bind` attribute. example:
+          `
+            data-bind='{
+              "type":     "intention",
+              "action":   "email_required",
+              "value":    "true"
+            }'
+          `
+
+          *** `$field.intent` is the object created from `data-bind` ***
+
+      • `intent.action` determines the function to invoke from the
+          `self.bindEvent` object
+
+    ======================================================================== */
+
+    self.bindEvent = {
 
       email_required:   function($field) {
 
                           // store the target
                           $field.$target = $field.$target || self.$form.find( '[data-type=email]' )
 
-                          console.dir( $field.$target )
+                          ////////console.dir( $field.$target )
+
+
                           // bind the event to the field
                           $field.on( 'change.intent', function() {
 
@@ -77,7 +205,7 @@
                           // create a listener 
       }
 
-    } // self.bind
+    } // self.bindEvent
 
 
 
@@ -159,51 +287,6 @@
 
 
 
-    /** Validate the given field **/
-
-    self.validateField = function($field, valid) {
-      var fieldType = $field[0].type,
-          fieldValue = ( fieldType === 'checkbox' || fieldType === 'radio' ) ? $field[0].checked : $field[0].value,
-          fieldDataType
-
-      // if there is already an error, return as invalid
-
-      if ( $field.prev('.js-error').length ) {
-        valid = false
-      }
-
-
-      // if there isn't already an error there
-      
-      else {
-
-        /** textareas & checkboxes **/
-
-        if ( ( fieldType === 'textarea' && !fieldValue ) || ( fieldType === 'checkbox' && !fieldValue ) ) {
-          self.warningShow( $field )
-          valid = false
-        }
-
-        else if ( fieldType === 'text' ) {
-
-          if ( !regEx[ $field[0].dataset.type ].test( fieldValue ) ) {
-            self.warningShow( $field )
-            valid = false
-          }
-        }
-
-        else {
-          console.log( 'this field seems valid' )
-          console.dir( $field )
-        }
-
-      }
-
-      return valid
-    }
-
-
-
     /** Bind the validation to the submit buttons **/
 
     self.bindValidation = function($button, form) {
@@ -264,7 +347,7 @@
           //Binder( $field, form )
 
           // bind the events
-          self.bind[ $field.intent.action ]( $field )
+          self.bindEvent[ $field.intent.action ]( $field )
         }
 
       }
