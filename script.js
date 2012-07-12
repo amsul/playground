@@ -6,7 +6,7 @@
 ========================================================================== */
 
 
-/* * /
+/* */
 (function($, window, document, undefined) {
 /* */
 
@@ -22,87 +22,21 @@
       ========================================================================== */
 
       start:      function() {
-                    var self      =   this,
-                        $content  =   $( document.body ),
-                        validate  =   Validator,
-                        bind      =   Binder
+                    var self        =   this,
+                        $content    =   $( document.body ),
+                        validation  =   function(i) {
+                                          Validator( this )
+                                        }
                     
-
-                    $content
-                      // find the data bindings
-                      .find( '[data-bind]' ).map(function(i) {
-                        self.bind( this )
-                      }).end().end()
-
-                      // initialize the validator on the content
-                      .find( '.js-form' ).map(function(i) {
-                        validate( this )
-                      })
+                    // map each form to a validator
+                    $content.find( '.js-form' ).map( validation )
                     
                     return self
-      }, // start
-
-
-      /*
-        Data bindings
-      ========================================================================== */
-
-      bind:       function(elem) {
-                    var self      =   this,
-                        $elem     =   $( elem ),
-                        intent    =   $elem.data('bind')
-
-
-                    self.bindingAction[ intent.type ]( $elem, intent )
-
-                    return self
-      },
-
-      bindingAction:   {
-
-                          form_action:    function($elem, intent) {
-
-                                            var doAction = {}
-
-                                            
-                                            // bind the element depending on the intent
-                                            $elem.on( intent.on, function(e) {
-                                              doAction[ intent.action ]( $elem, intent.value )
-                                            })
-
-
-                                            // make the email required
-                                            doAction.email_required = function($elem, value) {
-                                              console.log( $elem, value )
-                                            }
-
-                                           // console.log( $elem, intent )
-                          }
-      }
+      } // start
       
       
 
   }, // APP
-
-
-
-
-
-  /*
-    Bind some awesome events
-  ========================================================================== */
-
-  Binder = function($elem, target) {
-    var self = {}
-
-
-
-    console.log( 'binding' )
-
-
-
-    return self
-  },
 
 
 
@@ -114,6 +48,37 @@
 
   Validator = function(form) {
     var self = {}
+
+
+
+    /** Bind events with various intents **/
+
+    self.bind = {
+
+      email_required:   function($field) {
+
+                          // store the target
+                          $field.$target = $field.$target || self.$form.find( '[data-type=email]' )
+
+                          console.dir( $field.$target )
+                          // bind the event to the field
+                          $field.on( 'change.intent', function() {
+
+                            var is_required = $field.intent.value
+
+                            $field.$target[0].dataset.required = is_required
+
+                            if ( !is_required ) {
+                              self.warningRemove( $field.$target )
+                            }
+
+                            //////console.log( $field.$target )
+                          })
+                          // create a listener 
+      }
+
+    } // self.bind
+
 
 
     /** Warning template **/
@@ -144,10 +109,6 @@
         .insertBefore( $field )
 
 
-      // show the general form warning
-      self.$formWarning.show()
-
-
       // bind listener to remove warning
       $field.on( 'keydown.warning change.warning', warning.remover )
 
@@ -174,6 +135,30 @@
     }
 
 
+    /** Toggle the warning for a given field **/
+
+    self.warningToggle = function($field) {
+
+      console.log( $field )
+
+      return self
+
+      $field
+        // switch off the listner
+        .off( '.warning' )
+
+        // remove the error
+        .prev('.js-error').remove()
+
+
+      // hide the general form warning
+      self.$formWarning.hide()
+
+      return self
+    }
+
+
+
     /** Validate the given field **/
 
     self.validateField = function($field, valid) {
@@ -181,9 +166,16 @@
           fieldValue = ( fieldType === 'checkbox' || fieldType === 'radio' ) ? $field[0].checked : $field[0].value,
           fieldDataType
 
-      // only validate if there isn't already an error there
+      // if there is already an error, return as invalid
 
-      if ( !$field.prev('.js-error').length ) {
+      if ( $field.prev('.js-error').length ) {
+        valid = false
+      }
+
+
+      // if there isn't already an error there
+      
+      else {
 
         /** textareas & checkboxes **/
 
@@ -194,7 +186,7 @@
 
         else if ( fieldType === 'text' ) {
 
-          if ( !self.regEx[ $field[0].dataset.type ].test( fieldValue ) ) {
+          if ( !regEx[ $field[0].dataset.type ].test( fieldValue ) ) {
             self.warningShow( $field )
             valid = false
           }
@@ -202,7 +194,7 @@
 
         else {
           console.log( 'this field seems valid' )
-          console.dir(  $field )
+          console.dir( $field )
         }
 
       }
@@ -211,25 +203,33 @@
     }
 
 
+
     /** Bind the validation to the submit buttons **/
 
-    self._bindValidation = function($button, form) {
+    self.bindValidation = function($button, form) {
 
       var beginValidation = function(e) {
+
         var validity = true
+
         e.preventDefault()
 
         // recollect the fields
-        self._collectCycle( self.$form[0] )
+        self.collectCycle( self.$form[0] )
 
         // go through each field in the collection and validate
         for ( var i = 0, len = self.$collection.length; i < len; i += 1 ) {
+
           validity = self.validateField( self.$collection[ i ], validity )
 
-          if ( (i+1) === len ) {
-            console.log( 'last and form is ', validity )
+          if ( (i+1) === len && validity ) {
+            self.$form.find('.js-box-success').removeClass('hidden')
           }
         }
+
+        // if not valid in the end, show the general form warning
+        if ( !validity ) { self.$formWarning.show() }
+
       }
 
 
@@ -241,13 +241,43 @@
         .on( 'click', beginValidation )
 
       return self
+    } // bindValidation
+
+
+
+
+    /** Cycle through the fields to find those with bindings **/
+
+    self.bindIntents = function(form) {
+
+      var $field
+
+
+      // cycle through all the form fields
+      for ( var i = 0, len = form.length; i < len; i += 1 ) {
+
+        $field = $( form[ i ] )
+        $field.intent = $field.data('bind')
+
+        // if there's a binding
+        if ( $field.intent ) {
+          //Binder( $field, form )
+
+          // bind the events
+          self.bind[ $field.intent.action ]( $field )
+        }
+
+      }
+      
+
+      return self
     }
 
 
 
     /** Add a field to the collection **/
 
-    self._collectAdd = function($field) {
+    self.collectAdd = function($field) {
       self.$collection.push( $field )
       return self
     }
@@ -256,12 +286,12 @@
 
     /** Check if a field needs to be collected **/
 
-    self._collectCheck = function($field) {
+    self.collectCheck = function($field) {
       var addField = false
 
 
       // if the field is required, add to collection
-      if ( $field[0].dataset.required ) {
+      if ( $field[0].dataset.required === 'true' ) {
         addField = true
       }
 
@@ -275,14 +305,14 @@
 
         // if the button doesn't have a binding, then bind validation
         if ( !$field.data('binding') ) {
-          self._bindValidation( $field, form )
+          self.bindValidation( $field, form )
         }
       }
 
 
       // if the field needs to be added
       if ( addField ) {
-        self._collectAdd( $field )
+        self.collectAdd( $field )
       }
 
       return self
@@ -292,9 +322,11 @@
 
     /** Cycle through the fields in a form to add to collection **/
 
-    self._collectCycle = function(form) {
+    self.collectCycle = function(form) {
 
-      // create a collection for this form
+      var $field
+
+      // create an emtpy collection for this form
       self.$collection = []
 
 
@@ -302,7 +334,7 @@
       for ( var i = 0, len = form.length; i < len; i += 1 ) {
 
         // check and collect the fields
-        self._collectCheck( $( form[ i ] ) )
+        self.collectCheck( $( form[ i ] ) )
       }
 
       return self
@@ -312,9 +344,7 @@
 
     /** Initialize the Validator **/
 
-    self._init = (function() {
-
-      var field
+    self.__proto__.initialize = (function() {
 
       // store the form
       self.$form = $( form )
@@ -324,153 +354,38 @@
 
 
       // cycle through all the fields in this form to collect
-      self._collectCycle( form )
+      self.collectCycle( form )
 
+      // do the bindings on the form fields
+      self.bindIntents( form )
 
       return self
     })()
 
 
-
-    /** Some regex **/
-
-    self.regEx = {
-      email:      /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i
-    }
-
-
-    console.log( self )
+    console.log( 'Validator', self )
 
 
     return self
-  },
+  }
 
 
 
+  /** Some regex **/
 
+  regEx = {
 
+    email:      /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i
 
-
-
-
-  validateForm = function(e) {
-    e.preventDefault();
-
-    var button          =   this,
-        $button         =   $(this),
-        $form           =   $button.closest('.js-form'),
-        error           =   $form.find( '.generic-error' ),
-        valid           =   true,
-        showWarning     =   function($elem, error) {
-                                var warning = $elem[0].dataset.warning;
-
-                                // show the generic error
-                                error.show();
-
-                                // show the inline error
-                                if ( !$elem.prev( '.form-error-box' ).length ) {
-                                    error.inline = '<div class="form-error-box"><span class="arrow"></span><p class="desc" id="error_msg">' + warning + '</p></div>'
-                                    $elem.before( error.inline );
-                                }
-
-                                
-                                $elem
-                                    .addClass('warning')
-
-                                    // bind the change events
-                                    .on({ 'keyup.validate change.validate': removeWarning })
-
-
-                                // scroll up to the first error
-                                $('body, html').animate({
-                                    scrollTop: $('.form-error-box').first().offset().top - 40
-                                }, 250);
-        },
-        removeWarning   =   function(e) {
-                                var $elem = $(this);
-
-                                // hide the generic error
-                                error.hide();
-
-                                
-                                $elem
-                                    .removeClass('warning')
-
-                                    // remove this listener
-                                    .off( '.validate' )
-
-                                    // remove the warning
-                                    .prev( '.form-error-box' ).remove();
-        },
-        regEx           =   {
-                                email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i
-        },
-        field, valid;
-
-
-    /** Get all the fields that need validation **/
-
-    $form.fields = [];
-
-    for ( var i=0, len=$form[0].length; i < len; i += 1 ) {
-
-        field = $form[0][ i ];
-
-        // if this is a required field, push it in the collection
-        if ( field.dataset.required ) { $form.fields.push( field ) }
-
-        // if the field isn't required but has a value, push it in the collection
-        else if ( field.value && field.dataset.type ) {
-            $form.fields.push( field )
-        }
-    }
-
-
-    /** Validate each field in the collection **/
-
-    $( $form.fields ).each(function(i, elem) {
-
-        var $elem = $( elem );
-
-
-        if ( ( elem.type === 'textarea' && !elem.value ) || ( elem.type === 'checkbox' && !elem.checked ) ) {
-
-            showWarning( $elem, error );
-
-            // set valid as false
-            valid = false;
-        }
-
-        else if ( elem.type === 'text' ) {
-
-            if ( elem.dataset.type === 'email' && !regEx.email.test( elem.value ) ) {
-
-                showWarning( $elem, error );
-
-                // set valid as false
-                valid = false;
-            }
-        }
-
-        else {
-            console.log( 'no validation added yet' )
-            console.dir( elem )
-        }
-
-
-        // if it's the last field to validate and the form is valid
-        if ( $form.fields.length === (i+1) && valid ) {
-
-            // show the success message
-            $form
-                .closest( '.js-box-content' ).addClass('hidden')
-                .siblings( '.js-box-success' ).removeClass('hidden');
-        }
-    });
-
-
-    return false;
   };
+
+
+
+
+
+
+
+
 
 
 
@@ -480,7 +395,7 @@
 
   APP.start();
 
-/* * /
+/* */
 })(jQuery, window, document);
 /* */
 
