@@ -1,6 +1,8 @@
 
 
+/* * /
 (function($, window, document, undefined) {
+/* */
 
 
     /*
@@ -10,111 +12,224 @@
     var APP   =   {
 
 
-      start:    function() {
-                    var self = this
+        start:      function() {
+                        var self = this
 
 
-                    // store the content elem
-                    self.$content = $( document.body )
-                    
-                                        
-                    self.$content
-                        // map each form to a validator
-                        .find( '.js-form' ).map( self.validation )
-                        .end().end()
+                        // store the content elem
+                        self.$content = $( document.body )
+                        
+                                            
+                        self.$content
 
-                        // bind listener to apply the text counter on ready
-                        .find( '.js-text-counter' ).on('ready.counter', textCounter).trigger('ready')
-                        .end()
+                            // map each form to a validator
+                            .find( '.js-form' ).map( self.validation )
+                            .end().end()
 /*
-                        // bind dropkick to `select`
-                        .find( '.js-dropkick' ).dropkick();
-                    */
-                    return self;
-      }, // start
+                            // bind listener to apply the text counter on ready
+                            .find( '.js-text-counter' ).on('ready.counter', textCounter).trigger('ready')
+                            .end()
+            
+                            // bind dropkick to `select`
+                            .find( '.js-dropkick' ).dropkick();
+                        */
+                        return self;
+        }, // start
 
 
 
-      /*
-          Bind form validations
-      ======================================================================== */
+        /*
 
-      validation:   function(i) {
+            Form Validation
+            ---------------
 
-                        var options     =   {},
-                            form        =   this,
-                            validate    =   Validator,
-                            $content    =   APP.$content;
+            Forms can have custom validation events. To bind these events,
+            add a `data-type` attribute to the form. Example:
+                `data-type="__FORM_TYPE_HERE__"`
 
 
-                        // for IE 7
-                        form.dataset = form.dataset || {}
+            Custom events can be attached to the form by checking the form type:
+                `
+                    if ( form.dataset.type === '__FORM_TYPE_HERE__' ) {
+                        // start binding events here
+                        // ...
+                    }
+                `
+
+            The following functions are available to bind for custom form events:
 
 
-                        /** Feedback form **/
+            options.onLoad
+            --------------
 
-                        if ( form.dataset.type === 'form_feedback' ) {
-                            options.callback = function() {
-                                $content
-                                    .find('.js-box-content').addClass('hidden').end()
-                                    .find('.js-box-success').removeClass('hidden')
-                                scrollPageTo(0)
-                            }
+                A function to call on page load. The validator object is
+                in the scope. Example:
+                    `
+                        options.onLoad = function( thisValidator ) {
+                            // function goes here
+                            // ...
+                            console.log( thisValidator )
                         }
+                    `
 
 
-                        /** Password change form **/
+            options.beforeSubmit
+            --------------------
 
-                        else if ( form.dataset.type === 'form_password_change' ) {
-                            options.beforeSubmit = function( thisValidator ) {
+                A function to call before a successful submit. The validator
+                object is in the scope. Example:
+                    `
+                        options.onLoad = function( thisValidator ) {
+                            // function goes here
+                            // ...
+                            console.log( thisValidator )
+                        }
+                    `
 
-                                var passwordConfirm     =   thisValidator.$form.find( '#password-confirm' ),
-                                    passwordNew         =   thisValidator.$form.find( '#password-new' ),
-                                    passwordsMatch      =   passwordConfirm.val() === passwordNew.val()
+            options.callback
+            ----------------
 
-                                // if the passwords don't match, show a warning
-                                if ( !passwordsMatch ) {
+                A callback function called after a successful validation.
+                Example:
+                    `
+                        options.callback = function() {
+                            // function goes here
+                            // ...
+                        }
+                    `
 
-                                    thisValidator
+            options.bindEvent
+            -----------------
 
-                                        // show the inline warning
-                                        .warningShow( passwordConfirm, passwordConfirm.data('type-warning') )
+                A function that binds events to fields with `data-bind`. The
+                field and the validator object are in scope. Example:
+                    `
+                        options.bindEvent = function( $field, thisValidator ) {
+                            // function goes here
+                            // ...
+                            console.log( $field, $field.intent, thisValidator )
+                        }
+                    `
 
-                                        // show the form warning
-                                        .$formWarning.show()
+
+        ======================================================================== */
+
+        validation:     function(i) {
+
+                            var options     =   {},
+                                form        =   this,
+                                validate    =   Validator,
+                                $content    =   APP.$content;
+
+
+                            // for IE 7
+                            form.dataset = form.dataset || {}
+
+
+                            /** Feedback form **/
+
+                            if ( form.dataset.type === 'form_feedback' ) {
+
+                                options.bindEvent = function( $field, thisValidator ) {
+
+                                    var $form = thisValidator.$form
+
+
+                                    // intention is to make the email required
+
+                                    if ( $field.intent.action === 'email_required' ) {
+
+                                        // store the target
+                                        $field.$target = $field.$target || $form.find( '[data-type=email]' )
+
+                                        // bind the event to the field
+                                        $field.on( 'change.intent', function() {
+
+                                            var is_required = $field.intent.value
+
+                                            console.dir( $field )
+
+                                            $field.$target[0].dataset.required = is_required
+
+                                            if ( is_required === 'false' ) {
+                                                thisValidator.warningRemove( $field.$target )
+                                            }
+                                        })
+                                    }
                                 }
 
-                                return passwordsMatch
+                                options.callback = function() {
+                                    $content
+                                        .find('.js-box-content').addClass('hidden').end()
+                                        .find('.js-box-success').removeClass('hidden')
+                                    scrollPageTo(0)
+                                }
                             }
-                        }
 
 
-                        /** Email a friend form **/
+                            /** Password change form **/
 
-                        else if ( form.dataset.type === 'form_email_friend' ) {
-                            options.callback = function(){
-                                $content
-                                    .find('#email-friend #email-form').addClass('hidden').end()
-                                    .find('#email-friend #email-success').removeClass('hidden');
-                                scrollPageTo(550);
+                            else if ( form.dataset.type === 'form_password_change' ) {
+
+                                options.onLoad = function( thisValidator ) {
+                                    var $field
+
+                                    // go through the fields collection
+                                    for ( var i = 0, len = thisValidator.collection.length; i < len; i += 1 ) {
+                                        
+                                        $field = thisValidator.collection[ i ]
+
+                                        // store the password fields for later
+                                        if          ( $field[0].id === 'password-new' )         {       thisValidator.$passwordNew = $field         }
+                                        else if     ( $field[0].id === 'password-confirm' )     {       thisValidator.$passwordConfirm = $field     }
+                                    }
+                                }
+
+                                options.beforeSubmit = function( thisValidator ) {
+
+                                    var passwordConfirm     =   thisValidator.$passwordConfirm,
+                                        passwordNew         =   thisValidator.$passwordNew,
+                                        passwordsMatch      =   passwordConfirm.val() === passwordNew.val()
+
+                                    // if the passwords don't match, show a warning
+                                    if ( !passwordsMatch ) {
+
+                                        // show the inline & form warning
+                                        thisValidator
+                                            .warningShow( passwordConfirm, passwordConfirm.data('type-warning') )
+                                            .$formWarning.show()
+                                    }
+
+                                    return passwordsMatch
+                                }
                             }
-                        }
-               
 
-                        /** Update profile form **/
 
-                        else if ( form.dataset.type == 'form_update_profile' ) {
-                            options.callback = function() {
-                                $content
-                                    .find('#top .generic-success').show();
-                                scrollPageTo(0);  
+                            /** Email a friend form **/
+
+                            else if ( form.dataset.type === 'form_email_friend' ) {
+                                options.callback = function(){
+                                    $content
+                                        .find('#email-friend #email-form').addClass('hidden').end()
+                                        .find('#email-friend #email-success').removeClass('hidden');
+                                    scrollPageTo(550);
+                                }
                             }
-                        }
+                   
+
+                            /** Update profile form **/
+
+                            else if ( form.dataset.type === 'form_update_profile' ) {
+                                options.callback = function() {
+                                    $content
+                                        .find('#top .generic-success').show();
+                                    scrollPageTo(0);  
+                                }
+                            }
 
 
-                        // let the validation begin
-                        validate( form, options )
-
+                            // let the validation begin
+                            validate( form, options )
         } // validation
 
 
@@ -129,7 +244,7 @@
     textCounter = function(e) {
         var field       =   this,
             $field      =   $(field);
-/*
+
         $field
             // bind the counter plugin
             .jqEasyCounter({
@@ -142,7 +257,7 @@
             .trigger('keydown')
 
             // disable the listener
-            .off( '.counter' );*/
+            .off( '.counter' );
     },
 
 
@@ -162,39 +277,47 @@
 
 
         Form errors
-        ===========
+        -----------
 
         • General form error should have the class `js-form-warning hidden`
-        • Fields with inline errors should have the following attribute:
+        • Fields with inline errors should have the following attribute:
             `data-warning="__WARNING_MESSAGE_HERE__"`
 
 
-        Form fields
-        ===========
+        Multiple errors
+        ---------------
 
-        • Required fields should have the attribute `data-required="true"`
-        • Optional fields that require validation if filled in (eg email),
-            should have the attribute `data-type="email"`
+        • Fields can have a multiple warnings based on `data-type`. Example:
+            `data-type="__DATA_TYPE_HERE__"`
+            `data-warning="__WARNING_MESSAGE_HERE__"`
 
         • Check `self.validateField` for more info
 
 
-        Form event bindings
-        ===================
+        Form fields
+        -----------
 
-        • Bind events on form elements, such as a radio button that makes
-            email required on a value change, add the `data-bind` attribute:
-            `
-                data-bind='{
-                    "type":     "intention",
-                    "action":   "__UNIQUE_ACTION_NAME_HERE__",
-                    "value":    "__SOME_VALUE_HERE__"
-                }'
-            `
+        • Required fields should have the attribute `data-required="true"`
+        • Optional fields that require validation if filled in (eg email),
+            should have the attribute `data-type="__DATA_TYPE_HERE__"`
 
-            *** Remove the whitespace & line breaks ***
+        • Check `self.validateField` for more info
 
-        • Check `self.bindEvent` for more info
+
+        Bind events to fields
+        ---------------------
+
+        • Bind events to fields with the attribute `data-bind` with the
+            following format:
+                `
+                    data-bind='{
+                        "type":     "intention",
+                        "action":   "__UNIQUE_ACTION_NAME_HERE__",
+                        "value":    "__VALUE_HERE__"
+                    }'
+                `
+
+        • Check `options.bindEvent` for more info
 
 
     ========================================================================== */
@@ -342,62 +465,9 @@
 
 
 
-
-
-        /*
-
-            Bind events to fields
-            ---------------------
-
-            • Bind events to fields with `data-bind` attribute. example:
-                `
-                    data-bind='{
-                        "type":     "intention",
-                        "action":   "email_required",
-                        "value":    "true"
-                    }'
-                `
-
-                *** `$field.intent` is the object created from `data-bind` ***
-
-            • `intent.action` determines the function to invoke from the
-                `self.bindEvent` object
-
-        ======================================================================== */
-
-        self.bindEvent = {
-
-            email_required:     function($field) {
-
-                                    // store the target
-                                    $field.$target = $field.$target || self.$form.find( '[data-type=email]' )
-
-                                    ////////console.dir( $field.$target )
-
-
-                                    // bind the event to the field
-                                    $field.on( 'change.intent', function() {
-
-                                        var is_required = $field.intent.value
-
-                                        $field.$target[0].dataset.required = is_required
-
-                                        if ( is_required === 'false' ) {
-                                            self.warningRemove( $field.$target )
-                                        }
-
-                                        //////console.log( $field.$target )
-                                    })
-                                    // create a listener 
-            }
-
-        } // self.bindEvent
-
-
-
         /** Warning template **/
 
-        self.warningTemplate = (function() {
+        self.$warningTemplate = (function() {
             return $( '<div class="form-error-box error js-error"><span class="arrow"></span><p class="desc js-msg"></p></div>' )
         })()
 
@@ -407,7 +477,7 @@
 
         self.warningShow = function($field, dataWarning) {
             var message = dataWarning || $field[0].dataset.warning,
-                warning = self.warningTemplate.clone()
+                warning = self.$warningTemplate.clone()
 
             // if there is already an error, return as invalid
             if ( $field.prev('.js-error').length ) {
@@ -565,13 +635,10 @@
                 $field = $( form[ i ] )
                 $field.intent = $field.data('bind')
 
-                // if there's a binding
-                if ( $field.intent ) {
-
-                    // bind the events
-                    self.bindEvent[ $field.intent.action ]( $field )
+                // bind events the fields with a bind request
+                if ( self.options.bindEvent && $field.intent ) {
+                    self.options.bindEvent( $field, self )
                 }
-
             }
 
 
@@ -639,8 +706,10 @@
             // cycle through all the form fields
             for ( var i = 0, len = form.length; i < len; i += 1 ) {
 
+                $field = $( form[ i ] )
+
                 // check and collect the fields
-                self.collectCheck( $( form[ i ] ) )
+                self.collectCheck( $field )
             }
 
           return self
@@ -667,6 +736,11 @@
             // do the bindings on the form fields
             self.bindIntents( form )
 
+            // invoke anything that needs to be called on load
+            if ( self.options.onLoad ) {
+                self.options.onLoad( self )
+            }
+
             return self
         })()
 
@@ -675,7 +749,7 @@
 
 
         return self
-        
+
     }, // Validator
 
 
@@ -713,7 +787,9 @@
     APP.start();
 
 
+/* * /
 })(jQuery, window, document);
+/* */
 
 
 
