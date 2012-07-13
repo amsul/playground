@@ -48,7 +48,13 @@
 	<div class="box-label aligncenter"><label for="feedback_textarea" class="label">share your feedback</label></div>
 
 	<fieldset class="js-fieldset">
-		<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-warning="please fill in" data-chars-left="characters left" rows="3" maxlength="1000" tabindex="2"></textarea>
+		<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-default="some default text here" data-warning="please fill in" data-chars-left="characters left" rows="3" maxlength="1000" tabindex="2"></textarea>
+	</fieldset>
+
+
+	<fieldset class="fieldset-inline">
+		<div class="box-label"><label for="feedback_emails" class="label">multiple emails (optional)</label></div>
+		<div class="js-fieldset"><input value="aaa,  lo l , as@as.com " type="text" data-type="emails" data-warning="correct email please" id="feedback_emails" tabindex="3"></div>
 	</fieldset>
 
 
@@ -95,8 +101,6 @@
 
 
 <form id="change-password" method="post" class="js-form" data-type="form_password_change">
-
-	<p class="success js-box-success hidden">Good to go :)</p>
 
 	<div class="error js-form-warning hidden">Fix errors in form dude</div>
 

@@ -18,7 +18,6 @@
 
                         // store the content elem
                         self.$content = $( document.body )
-                        
                                             
                         self.$content
 
@@ -112,6 +111,25 @@
                     `
 
 
+
+            Scroll window position
+            ----------------------
+
+                Function `scrollPageTo` can be utilized for callbacks, etc. The
+                function accepts two optional parameters: `position` & `speed`
+                Example:
+                    `
+                        // scroll page to top at default speed
+                        scrollPageTo()
+
+                        // scroll page to 400px from top at 1000ms speed
+                        scrollPageTo( 400, 1000 )
+
+                        // scroll page to a jQuery object at default speed
+                        scrollPageTo( $(__SOME_SELECTOR__) )
+                    `
+
+
         ======================================================================== */
 
         validation:     function(i) {
@@ -146,8 +164,6 @@
                                         $field.on( 'change.intent', function() {
 
                                             var is_required = $field.intent.value
-
-                                            console.dir( $field )
 
                                             $field.$target[0].dataset.required = is_required
 
@@ -304,14 +320,22 @@
         • Check `self.validateField` for more info
 
 
+        Default field text
+        ------------------
+
+        • Fields can have default text inserted as value on page load
+            with the `data-default` attribute. Example:
+                `data-default="__DEFAULT_TEXT_HERE__"`
+
+
         Bind events to fields
         ---------------------
 
         • Bind events to fields with the attribute `data-bind` with the
-            following format:
+            following format (without line breaks & spaces):
                 `
                     data-bind='{
-                        "type":     "intention",
+                        "type":     "intention",    // required
                         "action":   "__UNIQUE_ACTION_NAME_HERE__",
                         "value":    "__VALUE_HERE__"
                     }'
@@ -342,8 +366,25 @@
             Validate optional fields
             ------------------------
 
-            • Validated using the attribute `data-type`.
-            • The field's `data-type` is validated with regEx
+            • Validated using the attribute `data-type="__FIELD_TYPE_HERE__"`
+            • Optional fields can be:
+                - input[type=text]
+
+            • If field is empty, it passes through. Otherwise it will validate
+                using the `data-type` as a reference. Example:
+                    `
+                        data-type="email"   // validated against email regEx
+                    `
+
+
+            Multiple emails
+            ---------------
+
+            • Validate multiple emails with `data-type` attribute:
+                `
+                    data-type="emails"      // emails separated by comma
+                `
+
 
         ======================================================================== */
 
@@ -392,10 +433,24 @@
                     // if there's a value and a data-type
                     else if ( fieldValue && fieldDataType ) {
 
-                        // validate it against regex
-                        if ( !regEx[ fieldDataType ].test( fieldValue ) ) {
-                            self.warningShow( $field, fieldDataWarning )
-                            return false
+                        console.log( fieldDataType )
+
+                        if ( fieldDataType === 'email' ) {
+
+                            // validate it against regex
+                            if ( !regEx[ fieldDataType ].test( fieldValue ) ) {
+                                self.warningShow( $field, fieldDataWarning )
+                                return false
+                            }
+                        }
+
+                        else if ( fieldDataType === 'emails' ) {
+                            var emails = fieldValue.split(',')
+
+                            for ( var i = 0, len = emails.length; i < len; i += 1 ) {
+                                emails[ i ] = $.trim( emails[ i ] )
+                            }
+                            console.log( 'do something', emails )
                         }
                     }
 
@@ -559,8 +614,8 @@
 
                 var options     =   self.options,
                     is_valid    =   true,
-                    validity,
-                    doSubmit
+                    doSubmit    =   true,
+                    validity
 
                 e.preventDefault()
 
@@ -587,7 +642,7 @@
                 // if the form is valid
                 else {
 
-
+                    // check if there's a call to make before submit
                     if ( options.beforeSubmit ) {
                         doSubmit = options.beforeSubmit( self )
                     }
@@ -626,7 +681,8 @@
 
         self.bindIntents = function(form) {
 
-            var $field
+            var $field,
+                fieldDefault
 
 
             // cycle through all the form fields
@@ -638,6 +694,13 @@
                 // bind events the fields with a bind request
                 if ( self.options.bindEvent && $field.intent ) {
                     self.options.bindEvent( $field, self )
+                }
+
+
+                // check if there's any default text to place
+                fieldDefault = $field[0].dataset.default
+                if ( fieldDefault ) {
+                    $field.val( fieldDefault )
                 }
             }
 
@@ -772,10 +835,18 @@
     scrollPageTo = function(position, speed) {
 
         // set the defaults
-        position = position || 0;
-        speed = ( speed === undefined || speed === null ) ? 250 : speed;
+        position = position || 0
+        speed = ( speed === undefined || speed === null ) ? 250 : speed
 
-        $('body, html').animate({ scrollTop: position }, speed);
+
+        // if it's an object, get the top position
+        if ( typeof position === 'object' ) {
+            position = position.first().position().top
+        }
+
+
+        // begin the scrolling
+        $('body, html').animate({ scrollTop: position }, speed)
     };
 
 
