@@ -1,4 +1,5 @@
 
+
 (function($, window, document, undefined) {
 
 
@@ -10,58 +11,16 @@
 
 
       start:    function() {
-                    var self        =   this,
-                        $content    =   $( document.body ),
-                        validation  =   function(i) {
-                                            var options     =   {},
-                                                form        =   this;
+                    var self = this
 
-                                            // for IE 7
-                                            form.dataset = form.dataset || {}
 
-                                            if ( form.dataset.type === 'form_feedback' ) {
-                                                options.callback = function() {
-                                                    $content
-                                                        .find('.js-box-content').addClass('hidden').end()
-                                                        .find('.js-box-success').removeClass('hidden');
-                                                    scrollPageTo(0);
-                                                }
-                                            }
-
-                                            else if ( form.dataset.type === 'form_password_change' ) {
-                                                options.newPasswordId = 'password-new'
-
-                                                options.beforeSubmit = function() {
-                                                    console.log( form )
-                                                    return false
-                                                }
-                                            }
-
-                                            else if ( form.dataset.type === 'form_email_friend' ) {
-                                                options.callback = function(){
-                                                    $content
-                                                        .find('#email-friend #email-form').addClass('hidden').end()
-                                                        .find('#email-friend #email-success').removeClass('hidden');
-                                                    scrollPageTo(550);
-                                                }
-                                            }
-                                            
-                                            else if ( form.dataset.type == 'form_update_profile' ) {
-                                                options.callback = function() {
-                                                    $content
-                                                        .find('#top .generic-success').show();
-                                                    scrollPageTo(0);  
-                                                }
-                                            }
-
-                                            Validator( form, options )
-                                        };
+                    // store the content elem
+                    self.$content = $( document.body )
                     
-                    
-                    
-                    $content
+                                        
+                    self.$content
                         // map each form to a validator
-                        .find( '.js-form' ).map( validation )
+                        .find( '.js-form' ).map( self.validation )
                         .end().end()
 
                         // bind listener to apply the text counter on ready
@@ -72,7 +31,91 @@
                         .find( '.js-dropkick' ).dropkick();
                     */
                     return self;
-      } // start
+      }, // start
+
+
+
+      /*
+          Bind form validations
+      ======================================================================== */
+
+      validation:   function(i) {
+
+                        var options     =   {},
+                            form        =   this,
+                            validate    =   Validator,
+                            $content    =   APP.$content;
+
+
+                        // for IE 7
+                        form.dataset = form.dataset || {}
+
+
+                        /** Feedback form **/
+
+                        if ( form.dataset.type === 'form_feedback' ) {
+                            options.callback = function() {
+                                $content
+                                    .find('.js-box-content').addClass('hidden').end()
+                                    .find('.js-box-success').removeClass('hidden')
+                                scrollPageTo(0)
+                            }
+                        }
+
+
+                        /** Password change form **/
+
+                        else if ( form.dataset.type === 'form_password_change' ) {
+                            options.beforeSubmit = function( thisValidator ) {
+
+                                var passwordConfirm     =   thisValidator.$form.find( '#password-confirm' ),
+                                    passwordNew         =   thisValidator.$form.find( '#password-new' ),
+                                    passwordsMatch      =   passwordConfirm.val() === passwordNew.val()
+
+                                // if the passwords don't match, show a warning
+                                if ( !passwordsMatch ) {
+
+                                    thisValidator
+
+                                        // show the inline warning
+                                        .warningShow( passwordConfirm, passwordConfirm.data('type-warning') )
+
+                                        // show the form warning
+                                        .$formWarning.show()
+                                }
+
+                                return passwordsMatch
+                            }
+                        }
+
+
+                        /** Email a friend form **/
+
+                        else if ( form.dataset.type === 'form_email_friend' ) {
+                            options.callback = function(){
+                                $content
+                                    .find('#email-friend #email-form').addClass('hidden').end()
+                                    .find('#email-friend #email-success').removeClass('hidden');
+                                scrollPageTo(550);
+                            }
+                        }
+               
+
+                        /** Update profile form **/
+
+                        else if ( form.dataset.type == 'form_update_profile' ) {
+                            options.callback = function() {
+                                $content
+                                    .find('#top .generic-success').show();
+                                scrollPageTo(0);  
+                            }
+                        }
+
+
+                        // let the validation begin
+                        validate( form, options )
+
+        } // validation
 
 
     }, // APP
@@ -161,7 +204,6 @@
 
 
 
-
         /* 
 
             Validate required fields
@@ -238,6 +280,7 @@
                     else {
                         console.log( 'some other text type', fieldDataType, $field )
                     }
+
                 } // fieldType = text
 
 
@@ -246,74 +289,36 @@
 
                 else if ( fieldType === 'password' ) {
 
+
                     // if there's no value
                     if ( !fieldValue ) {
                         self.warningShow( $field )
                         return false
                     }
 
-                    // if there is a value
+
+                    // if a new password is too short
+                    else if ( fieldValue.length < 8 && fieldDataType === 'password_new' ) {
+                        self.warningShow( $field, fieldDataWarning.password_short )
+                        return false
+                    }
+
+
+                    // if password length is fine
                     else {
 
-
-                        // if length is too short
-                        if ( fieldValue.length < 8 ) {
-
-
-                            // if there is only one possible data warning
-                            if ( typeof fieldDataWarning === 'string' ) {
-                                self.warningShow( $field, fieldDataWarning )
-                                return false
-                            }
-
-
-                            // if there are multiple possible warnings
-                            else {
-
-                                // if the field has a data type
-                                if ( fieldDataType === 'password_confirm' ) {
-                                    var origField;
-
-                                    // validate with the new password field
-                                    for ( var i = 0, len = self.collection.length; i < len; i += 1 ) {
-                                        origField = self.collection[ i ][0]
-
-                                        // if the id matches and the values dont match
-                                        if ( origField.id === options.newPasswordId && origField.value !== fieldValue ) {
-                                            self.warningShow( $field, fieldDataWarning.password_no_match )
-                                            return false
-                                        }
-                                    }
-                                }
-                                
-
-                                // otherwise show the length error
-                                else {
-
-                                    self.warningShow( $field, fieldDataWarning.password_short )
-                                    return false   
-                                }
-                            }
-
+                        // if it's a new password and doesn't match regex
+                        if ( fieldDataType === 'password_new' && !regEx.password.test( fieldValue ) ) {
+                            self.warningShow( $field, fieldDataWarning.password_insecure )
+                            return false
                         }
-
-
-                        // length is fine and has data type warning
-                        else if ( fieldDataWarning ) {
-                            
-                            // check if secure password
-                            if ( !regEx.password.test( fieldValue ) ) {
-                                self.warningShow( $field, fieldDataWarning.password_insecure )
-                                return false
-                            }
-                        }
-
 
                         else {
-                            console.log( 'silence' )
+                            //////console.log( $field )
                         }
 
-                    } // fieldValue has length
+                    }
+
 
                 } // fieldType = password
 
@@ -332,7 +337,8 @@
             }
 
             return
-        }
+
+        } // self.validateField
 
 
 
@@ -403,6 +409,10 @@
             var message = dataWarning || $field[0].dataset.warning,
                 warning = self.warningTemplate.clone()
 
+            // if there is already an error, return as invalid
+            if ( $field.prev('.js-error').length ) {
+                return self
+            }
 
             // bind the warning remover function
             warning.remover = function() {
@@ -494,7 +504,7 @@
 
 
                 // validity returns as false or undefined
-                is_valid = validity || is_valid
+                is_valid = ( validity === undefined || validity === null ) ? is_valid : validity
 
 
                 // if not valid in the end
@@ -509,7 +519,7 @@
 
 
                     if ( options.beforeSubmit ) {
-                        doSubmit = options.beforeSubmit.call()
+                        doSubmit = options.beforeSubmit( self )
                     }
 
 
@@ -526,7 +536,7 @@
                     }
                 }
 
-            }
+            } // beginValidation
 
 
             $button
@@ -665,7 +675,8 @@
 
 
         return self
-    },
+        
+    }, // Validator
 
 
 

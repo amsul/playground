@@ -35,19 +35,19 @@
 		<li>
 	        <div class="js-box-label">
 		        <label for="password">Password</label><br>
-			    <input type="password" id="password" name="password" data-required="true" data-warning="missed this field" data-typeee-warning="invalid format yo" value="00000000">
+			    <input type="password" id="password" name="password" data-required="true" data-warning="missed this field" data-type-warning='{"password_incorrect":"something seems wrong here"}' value="aaaaaaaa">
 		    </div>
 		</li>
 		<li>
 		    <div class="js-box-label">
 		    	<label for="password-new">Password new</label><br>
-		    	<input type="password" id="password-new" name="password-new" data-required="true" data-warning="missed this field" data-type-warning='{"password_short":"passworrd too short","password_insecure":"password needs capital, lower, and special or number"}' value="loL33!@lsl">
+		    	<input type="password" data-type="password_new" id="password-new" name="password-new" data-required="true" data-warning="missed this field" data-type-warning='{"password_short":"passworrd too short","password_insecure":"password needs capital, lower, and special or number"}' valueee="aaaaaaaa" value="loL33!@lsl">
 		    </div>
     	</li>
 		<li>
 			<div class="js-box-label">
 		        <label for="password-confirm">Password confirm</label><br>
-		        <input type="password" data-type="password_confirm" id="password-confirm" name="password-confirm" data-required="true" data-warning="missed this field" data-type-warning='{"password_no_match":"passwords dont match"}' value="a"> 
+		        <input type="password" data-type="password_confirm" id="password-confirm" name="password-confirm" data-required="true" data-warning="missed this field" data-type-warning="passwords dont match" value="loL33!@lsl">
 		    </div>
 		</li>
     </ul>
