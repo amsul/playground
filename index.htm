@@ -1,9 +1,9 @@
 <fieldset class="js-fieldset">
-	<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-warning="Please fill in." data-chars-left="characters left" cols="100" rows="4" maxlength="1000" tabindex="2"></textarea>
+	<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-warning="Please fill in." data-chars-left="character spaces left" cols="100" rows="4" maxlength="1000" tabindex="2">asdfasdfloll</textarea>
 </fieldset>
 
 
-<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script src="script.js"></script>
 <script type="text/javascript">
 	
@@ -16,6 +16,7 @@
             .charCounter({
                 maxChars:           12,
                 maxCharsWarning:    988,
+                msgCharsLeft:       $field.data('chars-left'),
                 msgFontFamily:      ''
             })
 

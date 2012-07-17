@@ -10,17 +10,6 @@
 
 
 
-        // update the values and lengths
-        self.update = function() {
-
-            self._value = self.$elem.val()
-            self._length = self._value.length
-
-            return self
-        }
-
-
-
         // check the status
         self.keypress = function(e) {
 
@@ -29,7 +18,7 @@
             // get the latest values and lengths
             self.update()
 
-            // check if selected
+            // check if not selected
             if ( !selected ) {
 
                 // if one more character makes length greater than max length
@@ -40,6 +29,95 @@
 
             return self
         }
+
+
+
+        // check the paste event
+        self.pasteEvent = function(e) {
+
+            var selection = {},
+                elem = this
+
+            e.preventDefault()
+
+            // all browsers
+            if ( window.getSelection ) {
+                selection.selected = window.getSelection().toString()
+                selection.start = elem.selectionStart
+                selection.end = elem.selectionEnd
+                selection.pastedText = e.originalEvent.clipboardData.getData('text')
+            }
+
+
+            // for IE
+            else {
+                selection.range = document.selection.createRange()
+                selection.selected = selection.range.text
+            }
+
+
+            // store the text before and after seleection
+            selection.startText = elem.value.substr( 0, selection.start )
+            selection.endText = elem.value.substr( selection.end )
+
+            // check the characters available to be pasted
+            selection.charsRemaining = self.options.maxChars - ( selection.startText.length + selection.endText.length )
+
+
+            // if there's no space left, just return it
+            if ( !selection.charsRemaining ) {
+                return self
+            }
+
+
+            // compose the selection and current value with the pasted text truncated
+            self._value = selection.startText + selection.pastedText.substr( 0, selection.charsRemaining ) + selection.endText
+
+
+            //console.log( selection )
+
+
+            // trim the value so that it updates in the actual textarea
+            self.trim()
+
+
+            // if there was a selection, set caret to the end point
+            if ( selection.selected ) {
+                elem.setSelectionRange( selection.end, selection.end )
+            }
+
+            // otherwise move to the start plus characters left
+            else {
+                elem.setSelectionRange( selection.start + selection.charsRemaining, selection.start + selection.charsRemaining )
+            }
+
+
+            // update and then print the chars left
+            self.update().print()
+
+
+            return self
+        }
+
+
+/*
+
+        // check the length after a paste event
+        self.paste = function() {
+
+            self
+                // get the latest values and lengths
+                .update()
+
+                // trim the values
+                .trim()
+
+                // print the counter
+                .print()
+
+            return self
+        }*/
+
 
 
 
@@ -58,47 +136,11 @@
 
 
 
-        // print the counter
-        self.print = function() {
+        // update the values and lengths
+        self.update = function() {
 
-            // the length cannot be greater than the maxlength
-            if ( self._maxlength < self._length ) {
-                self._length = self._maxlength
-            }
-
-            self.$counter[0].innerHTML = self._maxlength - self._length + ' characters left'
-            return self
-        }
-
-
-
-        // check if the value needs trimming
-        self.checkClipboard = function(e) {
-
-            // get the latest values and length
-            self.update()
-
-            var clipboardText = e.originalEvent.clipboardData.getData( 'text' )
-
-            // check it the text being pasted needs trimming
-            if ( clipboardText.length > self._maxlength ) {
-
-              // prevent initial event
-              e.preventDefault()
-
-              // set current value to clipboard text
-              self._value = clipboardText
-
-              self
-                  // trim if needed
-                  .trim()
-
-                  // update the values
-                  .update()
-
-                  // then print
-                  .print()
-            }
+            self._value = self.$elem.val()
+            self._length = self._value.length
 
             return self
         }
@@ -111,6 +153,19 @@
             return self
         }
 
+
+
+        // print the counter
+        self.print = function() {
+
+            // the length cannot be greater than the maxlength
+            if ( self._maxlength < self._length ) {
+                self._length = self._maxlength
+            }
+
+            self.$counter[0].innerHTML = self._maxlength - self._length + ' ' + self.options.msgCharsLeft
+            return self
+        }
 
 
 
@@ -137,7 +192,8 @@
                 .on({
                     'keypress':             self.keypress,
                     'input keyup cut':      self.count,
-                    'paste':                self.checkClipboard
+                    //'paste':                function() { setTimeout( self.paste, 10 ) },
+                    'paste':                self.pasteEvent
                 })
 
             return self
@@ -152,6 +208,7 @@
     defaults = {
         maxChars:           1000,
         maxCharsWarning:    80,
+        msgCharsLeft:       'characters left',
         msgFontSize:        '11px',
         msgFontColor:       '#000000',
         msgFontFamily:      'Arial',
