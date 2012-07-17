@@ -1,4 +1,4 @@
 playground
 ==========
 
-form validation & bindings
+`textarea` character counter + limiter

@@ -1,150 +1,27 @@
-<style type="text/css">
-	body {
-		font-family: sans-serif;
-	}
-	fieldset {
-		margin: 0 0 14px;
-	}
-	.error {
-		color: red;
-	}
-	.hidden {
-		display: none;
-	}
-	.success {
-		color: green;
-	}
-	ul {
-		list-style: none;
-		padding: 0;
-	}
-	li {
-		margin-bottom: 20px;
-	}
-</style>
+<fieldset class="js-fieldset">
+	<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-warning="Please fill in." data-chars-left="characters left" cols="100" rows="4" maxlength="1000" tabindex="2"></textarea>
+</fieldset>
 
 
-
-
-<form method="post" class="contentBox-form clearfix js-form" data-type="form_feedback">
-
-	<p class="success js-box-success hidden">Good to go :)</p>
-
-	<div class="error js-form-warning hidden">Fix errors in form dude</div>
-
-	<div class="aligncenter">
-		<fieldset class="fieldset-inline">
-			<div class="box-label"><span for="feedback_topic" class="label">choose one</span></div>
-			<select name="topic" id="feedback_topic" class="js-dropkick" tabindex="1">
-				<option value="">select</option>
-				<option value="">products</option>
-				<option value="">services</option>
-				<option value="">general</option>
-			</select>
-		</fieldset>
-	</div>
-
-
-	<div class="box-label aligncenter"><label for="feedback_textarea" class="label">share your feedback</label></div>
-
-	<fieldset class="js-fieldset">
-		<textarea name="feedback" id="feedback_textarea" class="js-text-counter" data-required="true" data-default="some default text here" data-warning="please fill in" data-chars-left="characters left" rows="3" maxlength="1000" tabindex="2"></textarea>
-	</fieldset>
-
-
-	<fieldset class="fieldset-inline">
-		<div class="box-label"><label for="feedback_emails" class="label">multiple emails (optional)</label></div>
-		<div class="js-fieldset"><input value="aaa,  lo l , as@as.com " type="text" data-type="emails" data-warning="correct email please" id="feedback_emails" tabindex="3"></div>
-	</fieldset>
-
-
-	<fieldset class="fieldset-inline">
-		<div class="box-label"><label for="feedback_email" class="label">email (optional)</label></div>
-		<div class="js-fieldset"><input value="" type="text" data-type="email" data-warning="correct email please" id="feedback_email" tabindex="3"></div>
-	</fieldset>
-
-
-	<fieldset class="fieldset-inline fieldset-secondary alignright">
-		<span class="tag-label">Can we follow up?</span>
-		<label class="label label-radio" for="feedback_contact_yes">
-			<input type="radio" name="feedback_followup" id="feedback_contact_yes" tabindex="4" data-bind='{"type":"intention","action":"email_required","value":"true"}'>
-			<span class="tag-label">yes</span>
-		</label>
-		<label class="label label-radio last" for="feedback_contact_no">
-			<input type="radio" name="feedback_followup" id="feedback_contact_no" checked="checked" tabindex="5" data-bind='{"type":"intention","action":"email_required","value":"false"}'>
-			<span class="tag-label">no</span>
-		</label>
-	</fieldset>
-
-
-	<fieldset class="js-fieldset">
-		<label class="label-checkbox" for="feedback_agreement">
-			<input type="checkbox" class="" id="feedback_agreement" data-required="true" data-warning="Please accept the legals" tabindex="6">
-			<span class="tag-label pad-left">i agree to the legal shit</span>
-		</label>
-	</fieldset>
-
-
-	<fieldset class="aligncenter">
-		<button class="button-black" tabindex="7"><span>send</span></button>
-	</fieldset>
-
-
-</form>
-
-
-<br>
-<hr>
-<hr>
-<br>
-
-
-
-<form id="change-password" method="post" class="js-form" data-type="form_password_change">
-
-	<div class="error js-form-warning hidden">Fix errors in form dude</div>
-
-	<ul>
-		<li>
-	        <div class="js-box-label">
-		        <label for="password">Password</label><br>
-			    <input type="password" id="password" name="password" data-required="true" data-warning="missed this field" data-type-warning='{"password_incorrect":"something seems wrong here"}' value="aaaaaaaa">
-		    </div>
-		</li>
-		<li>
-		    <div class="js-box-label">
-		    	<label for="password-new">Password new</label><br>
-		    	<input type="password" data-type="password_new" id="password-new" name="password-new" data-required="true" data-warning="missed this field" data-type-warning='{"password_short":"passworrd too short","password_insecure":"password needs capital, lower, and special or number"}' valueee="aaaaaaaa" value="loL33!@lsl">
-		    </div>
-    	</li>
-		<li>
-			<div class="js-box-label">
-		        <label for="password-confirm">Password confirm</label><br>
-		        <input type="password" data-type="password_confirm" id="password-confirm" name="password-confirm" data-required="true" data-warning="missed this field" data-type-warning="passwords dont match" value="loL33!@lsl">
-		    </div>
-		</li>
-    </ul>
-
-    <fieldset class="row last">
-		<input type="submit" class="button-black" value="Send">
-	</fieldset>					
-</form>
-
-
-
-<br>
-<br>
-<hr>
-<hr>
-<br><br><br><br>
-
-
-<form action="" class="js-form">
-	<input type="">
-	<textarea name="" id="" cols="30" rows="10"></textarea>
-</form>
-
-
-
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
 <script src="script.js"></script>
+<script type="text/javascript">
+	
+	(function($, window, document, undefined) {
+
+		var $field      =   $('#feedback_textarea');
+
+        $field
+            // bind the counter plugin
+            .charCounter({
+                maxChars:           12,
+                maxCharsWarning:    988,
+                msgFontFamily:      ''
+            })
+
+            // trigger it once to show the counter
+            .trigger('keyup')
+
+	})(jQuery)
+
+</script>
